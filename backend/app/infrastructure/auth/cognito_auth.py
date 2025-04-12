@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 from jose import JWTError, jwt
 
-from app.domain.entities.user import User
+from app.domain.user import User
 
 class CognitoAuth:
     def __init__(

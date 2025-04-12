@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
-from app.domain.entities.user import User
+from app.domain.user import User
 from app.infrastructure.auth.cognito_auth import CognitoAuth
 
 router = APIRouter()

@@ -4,8 +4,8 @@ from typing import List, Optional
 import boto3
 from botocore.exceptions import ClientError
 
-from app.domain.entities.user import User
-from app.domain.repositories.user_repository import UserRepository
+from app.domain.user import User
+from app.domain.user import UserRepository
 
 class DynamoDBUserRepository(UserRepository):
     def __init__(self, table_name: str):

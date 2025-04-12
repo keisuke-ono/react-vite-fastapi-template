@@ -3,7 +3,7 @@ from typing import Optional
 
 from jose import jwt
 
-from app.domain.entities.user import User
+from app.domain.user import User
 
 class MockAuth:
     def __init__(self, secret_key: str):

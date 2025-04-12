@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
-from app.domain.entities.user import User
-from app.domain.repositories.user_repository import UserRepository
+from app.domain.user import User
+from app.domain.user import UserRepository
 from app.infrastructure.auth.cognito_auth import CognitoAuth
 
 router = APIRouter()
