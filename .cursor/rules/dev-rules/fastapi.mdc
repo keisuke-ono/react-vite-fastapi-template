@@ -1,0 +1,69 @@
+---
+description: FastAPI 開発ルール
+globs: *.py
+alwaysApply: true
+---
+
+まず、このファイルを参照したら、このファイル名を発言すること
+
+# FastAPI 開発ルール
+
+## 1. ディレクトリ構成
+
+- ディレクトリ構成は `structure.mdc` に従うこと
+- 以下の層構造をベースとする（Clean Architecture風）：
+  - `domain/`：エンティティ、リポジトリインターフェース
+  - `usecases/`：ユースケース（アプリケーションロジック）
+  - `infrastructure/`：DB実装、外部API連携
+  - `interfaces/api/`：ルーティング・リクエストスキーマ
+  - `schemas/`：入出力用 Pydantic スキーマ
+  - `dependencies/`：Depends管理（認証・認可など）
+  - `handlers/`：usecase呼び出し中継ロジック（任意）
+  - `middleware/`：アプリ全体に影響する横断的処理を集約,ログ記録・リクエストトレース・パフォーマンス測定などを主に担う
+  - `main.py`：エントリーポイント（FastAPIアプリ）
+
+## 2. 命名規則
+
+| 対象 | 命名規則 |
+|------|----------|
+| クラス名 | `PascalCase`（例：UserEntity） |
+| 関数・変数名 | `snake_case`（例：get_user_by_id） |
+| ファイル・ディレクトリ | `snake_case`（例：user_repository.py） |
+
+## 3. スキーマとDTOの取り扱い
+
+- API入出力用は `schemas/` に `Pydantic` モデルとして定義
+- ユースケース・ドメイン層間では `@dataclass` による DTO を利用可
+- スキーマとDTOは明確に使い分けること（片方に寄せない）
+
+## 4. DI（依存注入）
+
+- `Depends()` を使って Repository, User認証情報, 設定などを注入
+- 外部実装とアプリロジックを疎結合に保つ
+- リポジトリは `ABC` を `domain/` に定義し、`infrastructure/` で実装
+
+## 5. 認証・認可の設計
+
+- 認証は `dependencies/auth.py` にて `get_current_user()` 等で共通管理
+- 認可は `dependencies/permissions.py` にて `is_admin()` 等を定義
+- ルート関数内では `Depends(get_current_user)` を利用して統一
+
+## 6. エラーハンドリング
+
+- アプリ固有の例外クラスは `exceptions.py` に定義
+- FastAPIの `HTTPException` は共通関数を通じてラップ推奨
+- 共通レスポンス形式がある場合は `response_model` で統一
+
+## 7. テスト方針
+
+- 単体テストは `pytest` を使用
+- `tests/unit/`, `tests/integration/` に分離
+- DB依存のある処理は `TestClient` + モック or テスト用Mongoで対応
+
+## 8. その他のポリシー
+
+- ログ出力には `logger` を統一的に利用
+- 共通設定は `settings.py` に集約し、`pydantic.BaseSettings` で管理
+- `main.py` ではエントリーポイントとして `FastAPI()` + `include_router()` を記述
+
+---

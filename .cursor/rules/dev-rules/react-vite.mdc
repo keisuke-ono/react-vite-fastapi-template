@@ -1,0 +1,74 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+まず、このファイルを参照したら、このファイル名を発言すること
+
+# React + Vite ベストプラクティス実装ルール
+
+## 1. ディレクトリ構成
+
+- ディレクトリ構成は `structure.mdc` に従うこと
+- `src/` 配下を起点とし、以下の責務で構成する：
+  - `components/`：共通UI・機能単位UI・レイアウト
+  - `pages/`：画面単位（ルーティング対象）
+  - `services/`：API通信
+  - `stores/`：Zustandでの状態管理
+  - `types/`：共通型定義
+  - `lib/`：ヘルパーやユーティリティ
+
+## 2. コンポーネント設計ルール
+
+- `shadcn/ui` をベースに共通コンポーネントを使用
+- コンポーネントは基本的に `PascalCase`、ファイル名は `kebab-case`
+- カスタマイズは最小限とし、Propsで拡張する形に留める
+
+```tsx
+// ✅ 良い例
+<Button variant="destructive">削除</Button>
+
+// ❌ 悪い例（ラップして独自スタイルをつける）
+const RedButton = styled(Button)` background-color: red; `
+```
+
+## 3. 状態管理（Zustand）
+
+- グローバルステートには `Zustand` を使用
+- ストアは `src/stores/` に配置
+- 単純なローカル状態は `useState` で十分
+
+## 4. フォーム設計
+
+- `shadcn/ui` のフォームコンポーネントを使用（例：`<Input />`, `<Label />`）
+- バリデーションには `zod` または `react-hook-form` を組み合わせて使用
+- 入力補助（プレースホルダ、autoComplete）も忘れずに
+
+## 5. レイアウト構造の原則
+
+- 共通レイアウトは `DashboardLayout` に集約
+- サイドバー（Sidebar）＋メイン（Main）の2カラム構成
+- `DashboardLayout` を全ページで共通利用すること
+
+## 6. コンポーネント追加・修正ポリシー
+
+- 既存UIの改変にはチーム承認が必要
+- `shadcn/ui` で追加されたコンポーネントは `src/components/ui` に保存し、直接編集してよい
+- Storybook対応がある場合は `stories/` で管理
+
+## 7. テストと品質
+
+- コンポーネント単体テストは `vitest` または `storybook play function` で対応
+- APIや画面統合テストは `cypress` または `Playwright` を検討
+- エラー表示やローディングは明示的に表現
+
+## 8. 命名規則
+
+| 対象 | 規則 |
+|------|------|
+| コンポーネント名 | `PascalCase` |
+| ファイル・ディレクトリ | `kebab-case` |
+| Zustand store名 | `auth.store.ts` のように `.store.ts` 接尾辞 |
+
+---

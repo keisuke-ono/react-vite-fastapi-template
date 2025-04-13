@@ -1,15 +1,14 @@
 from typing import List
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
 from app.domain.user import User
 from app.domain.user import UserRepository
-from app.infrastructure.auth.cognito_auth import CognitoAuth
+from app.interfaces.api.v1.dependencies import get_current_user, has_role
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class UserCreate(BaseModel):
     email: str
@@ -23,37 +22,17 @@ class UserUpdate(BaseModel):
 
 @router.get("/users", response_model=List[User])
 async def list_users(
-    token: str = Depends(oauth2_scheme),
-    user_repository: UserRepository = Depends(),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user),
+    user_repository: UserRepository = Depends()
 ):
-    # トークンの検証
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
     return await user_repository.list_users()
 
 @router.post("/users", response_model=User)
 async def create_user(
     user_create: UserCreate,
-    token: str = Depends(oauth2_scheme),
-    user_repository: UserRepository = Depends(),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user),
+    user_repository: UserRepository = Depends()
 ):
-    # トークンの検証
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
     # 既存ユーザーのチェック
     existing_user = await user_repository.get_by_email(user_create.email)
     if existing_user:
@@ -66,7 +45,8 @@ async def create_user(
     user = User(
         id=str(uuid.uuid4()),
         email=user_create.email,
-        username=user_create.username
+        username=user_create.username,
+        password_hash=""  # 実際には適切なパスワードハッシュを生成する必要があります
     )
     
     return await user_repository.create_user(user)
@@ -74,19 +54,9 @@ async def create_user(
 @router.get("/users/{user_id}", response_model=User)
 async def get_user(
     user_id: str,
-    token: str = Depends(oauth2_scheme),
-    user_repository: UserRepository = Depends(),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user),
+    user_repository: UserRepository = Depends()
 ):
-    # トークンの検証
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
     user = await user_repository.get_by_id(user_id)
     if not user:
         raise HTTPException(
@@ -100,19 +70,9 @@ async def get_user(
 async def update_user(
     user_id: str,
     user_update: UserUpdate,
-    token: str = Depends(oauth2_scheme),
-    user_repository: UserRepository = Depends(),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user),
+    user_repository: UserRepository = Depends()
 ):
-    # トークンの検証
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
     user = await user_repository.get_by_id(user_id)
     if not user:
         raise HTTPException(
@@ -133,19 +93,9 @@ async def update_user(
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
-    token: str = Depends(oauth2_scheme),
-    user_repository: UserRepository = Depends(),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user),
+    user_repository: UserRepository = Depends()
 ):
-    # トークンの検証
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
     success = await user_repository.delete_user(user_id)
     if not success:
         raise HTTPException(
@@ -153,4 +103,12 @@ async def delete_user(
             detail="User not found"
         )
     
-    return {"message": "User deleted successfully"} 
+    return {"message": "User deleted successfully"}
+
+# 管理者専用エンドポイント
+@router.get("/admin/users", dependencies=[Depends(has_role("admin"))])
+async def list_all_users(
+    user_repository: UserRepository = Depends()
+):
+    """管理者のみがアクセスできる全ユーザー一覧取得"""
+    return await user_repository.list_users() 

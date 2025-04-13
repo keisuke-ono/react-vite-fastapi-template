@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
 from app.domain.user import User
-from app.infrastructure.auth.cognito_auth import CognitoAuth
+from app.interfaces.api.v1.dependencies import get_current_user, oauth2_scheme
+from app.main import get_auth_service
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class Token(BaseModel):
     access_token: str
@@ -19,7 +19,7 @@ class LoginResponse(BaseModel):
 @router.post("/login", response_model=LoginResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    auth_service: CognitoAuth = Depends()
+    auth_service = Depends(get_auth_service)
 ):
     user = await auth_service.authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -37,19 +37,6 @@ async def login(
 
 @router.get("/me", response_model=User)
 async def read_users_me(
-    token: str = Depends(oauth2_scheme),
-    auth_service: CognitoAuth = Depends()
+    current_user: User = Depends(get_current_user)
 ):
-    payload = await auth_service.verify_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return User(
-        id=payload["sub"],
-        email=payload["email"],
-        username=payload["username"]
-    ) 
+    return current_user 

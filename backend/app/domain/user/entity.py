@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 @dataclass
 class User:
@@ -9,6 +9,7 @@ class User:
     username: str
     password_hash: str
     is_active: bool = True
+    roles: List[str] = field(default_factory=list)
     created_at: datetime = datetime.now()
     updated_at: Optional[datetime] = None
 
@@ -31,3 +32,23 @@ class User:
 
     def activate(self) -> None:
         self._set_active_status(True)
+        
+    def add_role(self, role: str) -> None:
+        """ユーザーにロールを追加"""
+        if role not in self.roles:
+            self.roles.append(role)
+            self.updated_at = datetime.now()
+            
+    def remove_role(self, role: str) -> None:
+        """ユーザーからロールを削除"""
+        if role in self.roles:
+            self.roles.remove(role)
+            self.updated_at = datetime.now()
+            
+    def has_role(self, role: str) -> bool:
+        """ユーザーが特定のロールを持っているかチェック"""
+        return role in self.roles
+        
+    def has_any_role(self, roles: List[str]) -> bool:
+        """ユーザーが指定されたロールのいずれかを持っているかチェック"""
+        return any(role in self.roles for role in roles)

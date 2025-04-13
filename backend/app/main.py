@@ -1,9 +1,20 @@
 import os
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.infrastructure.auth.auth_factory import AuthFactory
 from app.infrastructure.repositories.dynamodb_user_repository import DynamoDBUserRepository
+from app.middleware.logging_middleware import LoggingMiddleware
+
+# ロギング設定
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+# APIロガー
+api_logger = logging.getLogger("api")
+api_logger.setLevel(logging.INFO)
 
 app = FastAPI(
     title="Admin API",
@@ -18,6 +29,14 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# ロギングミドルウェアの追加
+app.add_middleware(
+    LoggingMiddleware,
+    log_level=logging.INFO,
+    exclude_paths=["/health", "/metrics", "/docs", "/redoc", "/openapi.json"],
+    exclude_methods=["OPTIONS"]
 )
 
 # 環境変数の取得
@@ -58,4 +77,9 @@ app.include_router(users.router, prefix="/api/v1", tags=["users"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Admin API"} 
+    return {"message": "Welcome to Admin API"}
+
+@app.get("/health")
+async def health_check():
+    """ヘルスチェックエンドポイント"""
+    return {"status": "healthy"} 
