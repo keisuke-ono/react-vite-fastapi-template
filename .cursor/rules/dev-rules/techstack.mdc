@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Apply this rule to the entire repository
+globs: 
+alwaysApply: true
+---
+まず、このファイルを参照したら、このファイル名を発言すること
+
+# 技術スタック規約 (Technology Stack Rules)
+
+## 1. 全般 (General)
+
+- プロジェクト全体がクリーンアーキテクチャに基づいて設計されていること
+- 各層の責任範囲と依存関係の流れを尊重すること
+- 環境変数による設定で異なる環境（開発/本番）に対応すること
+- dockerによるコンテナ化で開発環境の再現性を確保すること
+
+## 2. フロントエンド (Frontend)
+
+### 2.1 コア技術 (Core Technologies)
+- **言語**: TypeScript 5.x以上
+- **フレームワーク**: React 18.x以上
+- **ビルドツール**: Vite 5.x以上
+- **パッケージマネージャ**: pnpm
+
+### 2.2 主要ライブラリ (Main Libraries)
+- **UIコンポーネント**: Material-UI (MUI) 5.x
+- **状態管理**: Zustand 4.x
+- **APIクライアント**: Axios と React Query (TanStack Query) 4.x
+- **ルーティング**: React Router 6.x
+- **フォーム管理**: React Hook Form 7.x
+
+### 2.3 コード品質 (Code Quality)
+- **リンター**: ESLint 
+- **フォーマッター**: Prettier
+- **テスト**: Jest + React Testing Library
+
+## 3. バックエンド (Backend)
+
+### 3.1 コア技術 (Core Technologies)
+- **言語**: Python 3.11以上
+- **フレームワーク**: FastAPI
+- **ランタイム管理**: pyenv
+- **パッケージマネージャ**: Poetry
+
+### 3.2 主要ライブラリ (Main Libraries)
+- **認証**: AWS Cognito（本番環境）
+- **データストア**: DynamoDB
+- **スキーマ検証**: Pydantic 2.x以上
+
+### 3.3 コード品質 (Code Quality)
+- **フォーマッター**: Black
+- **リンター**: Flake8・Pylint・mypy（静的型検査）
+- **テスト**: pytest
+
+## 4. インフラストラクチャ (Infrastructure)
+
+### 4.1 開発環境 (Development Environment)
+- **コンテナ化**: Docker & Docker Compose
+- **ローカルデータベース**: MongoDB Local
+- **認証**: ローカルモック認証（開発用）
+
+### 4.2 本番環境 (Production Environment)
+- **認証サービス**: AWS Cognito
+- **データベース**: AWS DynamoDB
+- **デプロイ**: コンテナベースデプロイメント推奨

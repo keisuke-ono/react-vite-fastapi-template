@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: FastAPI + MongoDB Atlas App
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.11
+    Environment:
+      Variables:
+        MONGO_URI: !Ref MongoDbConnectionUri
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app/
+      Handler: main.handler
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+  MongoDbConnectionUri:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /myproject/mongo_uri
+      Type: String
+      Value: "mongodb+srv://<username>:<password>@cluster.mongodb.net/mydb?retryWrites=true&w=majority"
